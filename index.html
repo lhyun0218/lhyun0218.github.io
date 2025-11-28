@@ -1,0 +1,843 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>안심 전세 스코어</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: #f5f5f7;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 480px;
+            }
+        }
+
+        /* 헤더 */
+        .header {
+            background: #ffffff;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e5ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .header h1 {
+            color: #1d1d1f;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        /* 공지사항 슬라이더 */
+        .notice-container {
+            background: #f9f9fb;
+            padding: 10px 0;
+            overflow: hidden;
+            position: relative;
+            border-bottom: 1px solid #e5e5ea;
+        }
+
+        .notice-slider {
+            display: flex;
+            animation: slide 12s linear infinite;
+        }
+
+        .notice-item {
+            flex-shrink: 0;
+            color: #1d1d1f;
+            font-size: 13px;
+            margin-right: 60px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .notice-badge {
+            background: #ff3b30;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .notice-badge.warning {
+            background: #ff9500;
+        }
+
+        .notice-badge.info {
+            background: #007aff;
+        }
+
+        @keyframes slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* 지도 */
+        .map-container {
+            flex: 1;
+            min-height: 500px;
+            position: relative;
+            background: #f5f5f7;
+        }
+
+#map {
+    /* 기존 height: 100% 대신 absolute 포지션 사용 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+        .map-controls {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-btn {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            color: #1d1d1f;
+        }
+
+        .map-btn:active {
+            transform: scale(0.95);
+            background: #f5f5f7;
+        }
+
+        /* 필터 버튼 */
+        .filter-container {
+            display: flex;
+            padding: 16px 20px;
+            gap: 8px;
+            overflow-x: auto;
+            background: #ffffff;
+            border-top: 1px solid #e5e5ea;
+            scrollbar-width: none;
+        }
+
+        .filter-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-btn {
+            background: #f5f5f7;
+            border: 1px solid #e5e5ea;
+            color: #1d1d1f;
+            padding: 10px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .filter-btn:active {
+            transform: scale(0.95);
+        }
+
+        .filter-btn.active {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+        }
+
+        /* 상세 정보 화면 */
+        .detail-view {
+            position: fixed;
+            top: 100%;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            z-index: 2000;
+            transition: top 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        .detail-view.active {
+            top: 0;
+        }
+
+        .detail-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid rgba(229, 229, 234, 0.5);
+        }
+
+        .back-btn {
+            background: rgba(245, 245, 247, 0.8);
+            border: none;
+            color: #007aff;
+            font-size: 20px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:active {
+            background: #e5e5ea;
+        }
+
+        .detail-header h2 {
+            color: #1d1d1f;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .detail-content {
+            padding: 20px;
+            max-width: 100%;
+        }
+
+        .property-image {
+            width: 100%;
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, #f5f5f7 0%, #e5e5ea 100%);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #86868b;
+            font-size: 48px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .property-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 위험도 + 기본정보 그리드 */
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .risk-indicator {
+            text-align: center;
+            padding: 24px 16px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .risk-level {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 4px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .risk-low { 
+            color: #34c759;
+        }
+        
+        .risk-low .risk-badge {
+            background: rgba(52, 199, 89, 0.15);
+            color: #34c759;
+        }
+
+        .risk-medium { 
+            color: #ff9500;
+        }
+
+        .risk-medium .risk-badge {
+            background: rgba(255, 149, 0, 0.15);
+            color: #ff9500;
+        }
+
+        .risk-high { 
+            color: #ff3b30;
+        }
+
+        .risk-high .risk-badge {
+            background: rgba(255, 59, 48, 0.15);
+            color: #ff3b30;
+        }
+
+        .risk-text {
+            color: #86868b;
+            font-size: 11px;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        /* 간략 정보 카드 */
+        .quick-info {
+            padding: 20px 16px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .quick-item {
+            margin-bottom: 14px;
+        }
+
+        .quick-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .quick-label {
+            font-size: 11px;
+            color: #86868b;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .quick-value {
+            font-size: 15px;
+            color: #1d1d1f;
+            font-weight: 600;
+        }
+
+        /* 상세 정보 그리드 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .info-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: #86868b;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #1d1d1f;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* 주소 카드 */
+        .address-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .address-label {
+            font-size: 12px;
+            color: #86868b;
+            margin-bottom: 6px;
+        }
+
+        .address-text {
+            font-size: 15px;
+            color: #1d1d1f;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        /* 플랫폼 링크 */
+        .platform-links {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .platform-item {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 14px;
+            padding: 18px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #1d1d1f;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .platform-item:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .platform-logo {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .platform-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #1d1d1f;
+        }
+
+        /* 마커 스타일 */
+        .custom-marker {
+            background: #007aff;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.4);
+        }
+
+        .custom-marker.high {
+            background: #ff3b30;
+            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.4);
+        }
+
+        .custom-marker.medium {
+            background: #ff9500;
+            box-shadow: 0 2px 8px rgba(255, 149, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <img src="BL.png" alt="부산광역시" class="logo" onerror="this.style.display='none'">
+            <h1>안심 전세 스코어</h1>
+        </div>
+
+        <!-- 공지사항 슬라이더 -->
+        <div class="notice-container">
+            <div class="notice-slider">
+                <div class="notice-item">
+                    <span class="notice-badge">긴급</span>
+                    부산 연제구 **동 전세사기 주의보 발령
+                </div>
+                <div class="notice-item">
+                    <span class="notice-badge warning">주의</span>
+                    해운대구 일대 다가구 전세 계약 시 임대인 확인 필수
+                </div>
+                <div class="notice-item">
+                    <span class="notice-badge info">알림</span>
+                    사하구 신축 빌라 전세 보증금 미반환 사례 증가
+                </div>
+                <div class="notice-item">
+                    <span class="notice-badge">위험</span>
+                    부산진구 다대포 지역 깡통전세 의심 매물 발견
+                </div>
+                <div class="notice-item">
+                    <span class="notice-badge">긴급</span>
+                    부산 연제구 **동 전세사기 주의보 발령
+                </div>
+                <div class="notice-item">
+                    <span class="notice-badge warning">주의</span>
+                    해운대구 일대 다가구 전세 계약 시 임대인 확인 필수
+                </div>
+                <div class="notice-item">
+                    <span class="notice-badge info">알림</span>
+                    사하구 신축 빌라 전세 보증금 미반환 사례 증가
+                </div>
+                <div class="notice-item">
+                    <span class="notice-badge">위험</span>
+                    부산진구 다대포 지역 깡통전세 의심 매물 발견
+                </div>
+            </div>
+        </div>
+
+        <!-- 지도 -->
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-controls">
+                <button class="map-btn" onclick="locateMe()" title="현재 위치">📍</button>
+                <button class="map-btn" onclick="zoomIn()" title="확대">+</button>
+                <button class="map-btn" onclick="zoomOut()" title="축소">−</button>
+                <button class="map-btn" onclick="streetView()" title="스트리트뷰">👁️</button>
+            </div>
+        </div>
+
+        <!-- 필터 버튼 -->
+        <div class="filter-container">
+            <button class="filter-btn active">지역 ▼</button>
+            <button class="filter-btn">유형 ▼</button>
+            <button class="filter-btn">전세가 ▼</button>
+            <button class="filter-btn">평수 ▼</button>
+            <button class="filter-btn">위험도 ▼</button>
+            <button class="filter-btn">⚙️ 설정</button>
+        </div>
+    </div>
+
+    <!-- 상세 정보 화면 -->
+    <div class="detail-view" id="detailView">
+        <div class="detail-header">
+            <button class="back-btn" onclick="closeDetail()">←</button>
+            <h2>매물 상세정보</h2>
+        </div>
+        <div class="detail-content">
+            <div class="property-image"><img src="home.png" alt=""></div>
+            
+            <div class="address-card">
+                <div class="address-label">주소</div>
+                <div class="address-text" id="address">-</div>
+            </div>
+
+            <div class="top-grid">
+                <div class="risk-indicator" id="riskIndicator">
+                    <div class="risk-badge">위험도</div>
+                    <div class="risk-level" id="riskLevel">낮음</div>
+                    <div class="risk-text" id="riskText">안전</div>
+                </div>
+
+                <div class="quick-info">
+                    <div class="quick-item">
+                        <div class="quick-label">전세가</div>
+                        <div class="quick-value" id="price">-</div>
+                    </div>
+                    <div class="quick-item">
+                        <div class="quick-label">전용면적</div>
+                        <div class="quick-value" id="size">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-card-title">🏢 건물정보</div>
+                    <div class="info-item">
+                        <span class="info-label">유형</span>
+                        <span class="info-value" id="type">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">준공</span>
+                        <span class="info-value" id="year">-</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-title">📋 법률검토</div>
+                    <div class="info-item">
+                        <span class="info-label">등기부</span>
+                        <span class="info-value" id="registry">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">근저당</span>
+                        <span class="info-value" id="mortgage">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="platform-links">
+                <div class="section-title">부동산 플랫폼 연계</div>
+                <div class="platform-grid">
+                    <a href="#" class="platform-item" onclick="return openPlatform('다방')">
+                        <div class="platform-logo">🏠</div>
+                        <div class="platform-name">다방</div>
+                    </a>
+                    <a href="#" class="platform-item" onclick="return openPlatform('직방')">
+                        <div class="platform-logo">🏡</div>
+                        <div class="platform-name">직방</div>
+                    </a>
+                    <a href="#" class="platform-item" onclick="return openPlatform('네이버')">
+                        <div class="platform-logo">🏘️</div>
+                        <div class="platform-name">네이버</div>
+                    </a>
+                    <a href="#" class="platform-item" onclick="return openPlatform('호갱노노')">
+                        <div class="platform-logo">🏢</div>
+                        <div class="platform-name">호갱노노</div>
+                    </a>
+                    <a href="#" class="platform-item" onclick="return openPlatform('피터팬')">
+                        <div class="platform-logo">🏘️</div>
+                        <div class="platform-name">피터팬</div>
+                    </a>
+                    <a href="#" class="platform-item" onclick="return openPlatform('부동산114')">
+                        <div class="platform-logo">🏛️</div>
+                        <div class="platform-name">부동산114</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let map;
+
+        // 샘플 전세 매물 데이터
+        const properties = [
+            { 
+                id: 1, lat: 35.1796, lng: 129.0756, 
+                address: '부산 연제구 연산동', 
+                price: '2억 5천', size: '25평', 
+                type: '아파트', year: '2015년', 
+                risk: 'low', registry: '정상', mortgage: '없음'
+            },
+            { 
+                id: 2, lat: 35.1580, lng: 129.0600, 
+                address: '부산 부산진구 부전동', 
+                price: '1억 8천', size: '20평', 
+                type: '빌라', year: '2010년', 
+                risk: 'high', registry: '저당권', mortgage: '1억 5천'
+            },
+            { 
+                id: 3, lat: 35.1650, lng: 129.1280, 
+                address: '부산 해운대구 우동', 
+                price: '3억 2천', size: '32평', 
+                type: '아파트', year: '2018년', 
+                risk: 'low', registry: '정상', mortgage: '없음'
+            },
+            { 
+                id: 4, lat: 35.1480, lng: 129.0450, 
+                address: '부산 동구 초량동', 
+                price: '1억 5천', size: '18평', 
+                type: '다가구', year: '2008년', 
+                risk: 'medium', registry: '근저당', mortgage: '8천'
+            },
+            { 
+                id: 5, lat: 35.1900, lng: 129.0900, 
+                address: '부산 수영구 광안동', 
+                price: '2억 8천', size: '28평', 
+                type: '아파트', year: '2017년', 
+                risk: 'low', registry: '정상', mortgage: '없음'
+            }
+        ];
+
+        // 페이지 로드 후 지도 초기화
+        window.addEventListener('load', function() {
+            // 지도 초기화
+            map = L.map('map', {
+                center: [35.1796, 129.0756],
+                zoom: 13,
+                zoomControl: false
+            });
+            
+            // 타일 레이어 추가
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // 지도가 완전히 로드된 후 마커 추가
+            map.whenReady(function() {
+                properties.forEach(prop => {
+                    const markerClass = prop.risk === 'high' ? 'high' : prop.risk === 'medium' ? 'medium' : '';
+                    
+                    const customIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div class="custom-marker ${markerClass}">${prop.id}</div>`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16]
+                    });
+
+                    const marker = L.marker([prop.lat, prop.lng], { icon: customIcon }).addTo(map);
+                    marker.on('click', () => showDetail(prop));
+                });
+
+                // 지도 크기 재조정
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
+            });
+
+            // 필터 버튼
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+
+        // 지도 컨트롤
+        function locateMe() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => map.setView([pos.coords.latitude, pos.coords.longitude], 15),
+                    () => alert('위치 정보를 가져올 수 없습니다.')
+                );
+            }
+        }
+
+        function zoomIn() { map.zoomIn(); }
+        function zoomOut() { map.zoomOut(); }
+        
+        function streetView() {
+            const c = map.getCenter();
+            window.open(`https://www.google.com/maps/@${c.lat},${c.lng},3a,75y,90t/data=!3m6!1e1`, '_blank');
+        }
+
+        // 상세 정보
+        function showDetail(prop) {
+            document.getElementById('detailView').classList.add('active');
+            document.getElementById('address').textContent = prop.address;
+            document.getElementById('price').textContent = prop.price;
+            document.getElementById('size').textContent = prop.size;
+            document.getElementById('type').textContent = prop.type;
+            document.getElementById('year').textContent = prop.year;
+            document.getElementById('registry').textContent = prop.registry;
+            document.getElementById('mortgage').textContent = prop.mortgage;
+
+            const indicator = document.getElementById('riskIndicator');
+            const level = document.getElementById('riskLevel');
+            const text = document.getElementById('riskText');
+            
+            indicator.className = 'risk-indicator';
+            
+            if (prop.risk === 'high') {
+                indicator.classList.add('risk-high');
+                level.textContent = '높음';
+                text.textContent = '주의 필요';
+            } else if (prop.risk === 'medium') {
+                indicator.classList.add('risk-medium');
+                level.textContent = '보통';
+                text.textContent = '추가 확인';
+            } else {
+                indicator.classList.add('risk-low');
+                level.textContent = '낮음';
+                text.textContent = '안전';
+            }
+        }
+
+        function closeDetail() {
+            document.getElementById('detailView').classList.remove('active');
+        }
+
+        function openPlatform(name) {alert(`${name} 앱으로 이동합니다.`);
+        return false;
+    }
+</script>
+</body>
+</html>
