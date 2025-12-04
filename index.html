@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이현규 - Frontend Developer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body.light-mode {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #e5e9f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 20px 0;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .theme-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent);
+            transform: scale(1.05);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 80px;
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-content .subtitle {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-content .description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            animation: fadeInUp 0.8s ease 0.6s both;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: var(--glass-border);
+            transform: translateY(-2px);
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            transition: all 0.3s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Section */
+        section {
+            padding: 100px 0;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 60px;
+            color: var(--text-primary);
+        }
+
+        /* About Section */
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .about-item h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .about-item p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .education-item {
+            padding: 15px 0;
+            border-left: 3px solid var(--accent);
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+
+        .education-item .year {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .education-item .school {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Projects Section */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .project-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .project-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        .project-card .role {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+
+        .project-card p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tech-tag {
+            background: var(--glass-border);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .features-list li {
+            color: var(--text-secondary);
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .features-list li:before {
+            content: "▹";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        /* Contact Section */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+
+        .contact-item {
+            padding: 30px;
+        }
+
+        .contact-item .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .contact-item h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .contact-item a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .contact-item a:hover {
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-content .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">이 현 규</div>
+            <ul class="nav-links">
+                <li><a href="#about">이현규에 대하여</a></li>
+                <li><a href="#projects">프로젝트</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>이현규</h1>
+            <p class="subtitle">Frontend Developer</p>
+            <p class="description">
+                사용자 경험을 최우선으로 생각하며, 세련된 UI와 인터랙션으로<br>
+                가치 있는 웹 서비스를 만들어갑니다.
+            </p>
+            <div class="cta-buttons">
+                <a href="#projects" class="btn btn-primary">프로젝트 보기</a>
+                <a href="https://github.com/lhyun0218" target="_blank" class="btn btn-secondary">GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            
+            <div class="glass-card">
+                <div class="about-grid">
+                    <div class="about-item">
+                        <h3>🎓 Education</h3>
+                        <div class="education-item">
+                            <div class="year">2025</div>
+                            <div class="school">동의과학대학교</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">컴퓨터소프트웨어학과 2학년 재학중</div>
+                        </div>
+                        <div class="education-item">
+                            <div class="year">2022</div>
+                            <div class="school">부산 예원고등학교 졸업</div>
+                        </div>
+                        <div class="education-item">
+                            <div class="year">2019</div>
+                            <div class="school">부산 신정중학교 졸업</div>
+                        </div>
+                        <div class="education-item">
+                            <div class="year">2016</div>
+                            <div class="school">부산 신정초등학교 졸업</div>
+                        </div>
+                    </div>
+
+                    <div class="about-item">
+                        <h3>💡 Skills</h3>
+                        <p>
+                            <strong style="color: var(--accent);">Frontend</strong><br>
+                            HTML5, CSS3, JavaScript, React
+                        </p>
+                        <p style="margin-top: 15px;">
+                            <strong style="color: var(--accent);">Design</strong><br>
+                            UX/UI Design, Animation, Glassmorphism
+                        </p>
+                    </div>
+
+                    <div class="about-item">
+                        <h3>🎯 Focus</h3>
+                        <p>
+                            직관적이고 매력적인 사용자 인터페이스를 구현하는 것에 집중하고 있습니다. 
+                            최신 웹 트렌드를 반영한 디자인과 부드러운 애니메이션으로 
+                            사용자에게 즐거운 경험을 제공하고자 합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects">
+        <div class="container">
+            <h2 class="section-title">Projects</h2>
+            
+            <div class="projects-grid">
+                <!-- Project 1 -->
+                <div class="project-card">
+                    <h3>☕ 카페 키오스크</h3>
+                    <span class="role">Frontend Developer</span>
+                    <p>실제 카페 키오스크를 구현한 웹 애플리케이션입니다. 사용자 친화적인 UI와 매장 관리 기능을 제공합니다.</p>
+                    
+                    <ul class="features-list">
+                        <li>메뉴 선택 및 수량 조절 시스템</li>
+                        <li>테이크아웃/매장 선택 기능</li>
+                        <li>실시간 영수증 출력</li>
+                        <li>관리자 모드 (매출 확인)</li>
+                        <li>이벤트 알림 표시</li>
+                        <li>부드러운 UI 애니메이션</li>
+                    </ul>
+
+                    <div class="tech-stack">
+                        <span class="tech-tag">HTML5</span>
+                        <span class="tech-tag">CSS3</span>
+                        <span class="tech-tag">JavaScript</span>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="project-card">
+                    <h3>🛒 사성판매 커뮤니티</h3>
+                    <span class="role">Frontend Developer (UX/UI)</span>
+                    <p>사용자 간 물품 거래와 커뮤니티 기능을 제공하는 웹 플랫폼의 프론트엔드를 담당했습니다.</p>
+                    
+                    <ul class="features-list">
+                        <li>전체 UX/UI 설계 및 구현</li>
+                        <li>React 기반 컴포넌트 개발</li>
+                        <li>인터랙티브 애니메이션 구현</li>
+                        <li>반응형 레이아웃 디자인</li>
+                        <li>백엔드 API 연동</li>
+                    </ul>
+
+                    <div class="tech-stack">
+                        <span class="tech-tag">React</span>
+                        <span class="tech-tag">CSS3</span>
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">JSP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <div class="container">
+            <h2 class="section-title">Contact</h2>
+            
+            <div class="glass-card">
+                <div class="contact-grid">
+                    <div class="contact-item">
+                        <div class="icon">📧</div>
+                        <h3>Email</h3>
+                        <a href="mailto:lhyun0218@gmail.com">lhyun0218@gmail.com</a>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="icon">📱</div>
+                        <h3>Phone</h3>
+                        <a href="tel:010-7684-6515">010-7684-6515</a>
+                    </div>
+
+                    <div class="contact-item">
+                        <div class="icon">💻</div>
+                        <h3>GitHub</h3>
+                        <a href="https://github.com/lhyun0218" target="_blank">github.com/lhyun0218</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 이현규. All rights reserved.</p>
+        <p style="margin-top: 10px; font-size: 0.9rem;">Frontend Developer Portfolio</p>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const themeBtn = document.querySelector('.theme-toggle');
+            themeBtn.textContent = document.body.classList.contains('light-mode') ? '🌞' : '🌓';
+        }
+
+        // Smooth Scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Scroll Animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.8s ease forwards';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.glass-card, .project-card').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
